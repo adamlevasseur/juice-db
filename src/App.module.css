@@ -1,0 +1,201 @@
+.app {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+.sidebar {
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.resizeH {
+  width: 4px;
+  cursor: col-resize;
+  background: var(--border);
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.resizeH:hover, .resizeH:active { background: var(--accent); }
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* Color stripe — thin banner showing the active connection's color */
+.colorStripe {
+  height: 3px;
+  flex-shrink: 0;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.tabBar {
+  display: flex;
+  align-items: center;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+  padding-top: 28px;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 10px;
+  height: 36px;
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-app-region: no-drag;
+}
+
+.tab:hover { background: var(--bg-hover); }
+.tabActive {
+  background: var(--bg) !important;
+  border-bottom: 2px solid var(--tab-accent, var(--accent));
+}
+
+/* Color dot shown on tabs with a connection color */
+.tabColorDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tabTitle {
+  font-size: 12px;
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+
+/* Inline rename input */
+.tabRenameInput {
+  font-size: 12px;
+  width: 120px;
+  background: var(--bg-surface);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  padding: 1px 4px;
+  color: var(--text);
+  outline: none;
+}
+
+.tabClose {
+  font-size: 14px;
+  color: var(--text-muted);
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+}
+
+.tab:hover .tabClose { opacity: 1; }
+.tabClose:hover { background: var(--bg-hover); color: var(--text); }
+
+.newTab {
+  padding: 0 12px;
+  height: 36px;
+  color: var(--text-muted);
+  font-size: 16px;
+  flex-shrink: 0;
+  -webkit-app-region: no-drag;
+}
+
+.newTab:hover { color: var(--text); background: var(--bg-hover); }
+
+.split {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.editorPane {
+  flex-shrink: 0;
+  overflow: hidden;
+  min-height: 80px;
+}
+
+.resizeV {
+  height: 4px;
+  cursor: row-resize;
+  background: var(--border);
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.resizeV:hover, .resizeV:active { background: var(--accent); }
+
+.bottomPane {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 60px;
+}
+
+.panelTabs {
+  display: flex;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.panelTab, .panelTabActive {
+  padding: 6px 16px;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+}
+
+.panelTabActive {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.panelTab:hover { color: var(--text); }
+
+.panelContent {
+  flex: 1;
+  overflow: hidden;
+}
+
+.welcome {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.welcomeText {
+  text-align: center;
+}
+
+.welcomeText h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.welcomeText p {
+  color: var(--text-muted);
+  font-size: 14px;
+}

@@ -1,0 +1,128 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+  width: 480px;
+}
+
+.form h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.form label input,
+.form label select {
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+}
+
+.checkbox {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px !important;
+  color: var(--text) !important;
+}
+
+.checkbox input { width: auto !important; }
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.testBtn {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-dim);
+}
+
+.testBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+.saveBtn {
+  padding: 6px 16px;
+  background: var(--accent);
+  color: var(--bg);
+  border-radius: var(--radius);
+  font-weight: 600;
+}
+
+.saveBtn:hover { opacity: 0.85; }
+
+.success {
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--green) 15%, transparent);
+  border: 1px solid var(--green);
+  border-radius: var(--radius);
+  color: var(--green);
+  font-size: 12px;
+}
+
+.error {
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--red) 15%, transparent);
+  border: 1px solid var(--red);
+  border-radius: var(--radius);
+  color: var(--red);
+  font-size: 12px;
+}
+
+.hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.paletteLabel {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.palette {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-hover);
+  transition: transform 0.1s, border-color 0.1s;
+}
+
+.swatch:hover { transform: scale(1.15); }
+
+.swatchSelected {
+  border-color: var(--text) !important;
+  transform: scale(1.15);
+}
+
+.noColor {
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1;
+}

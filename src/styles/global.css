@@ -1,0 +1,63 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #1e1e2e;
+  --bg-panel: #181825;
+  --bg-surface: #252537;
+  --bg-hover: #313244;
+  --border: #313244;
+  --text: #cdd6f4;
+  --text-muted: #6c7086;
+  --text-dim: #a6adc8;
+  --accent: #89b4fa;
+  --accent-dim: #45475a;
+  --green: #a6e3a1;
+  --red: #f38ba8;
+  --yellow: #f9e2af;
+  --radius: 6px;
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', 'Menlo', monospace;
+  --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+html, body, #root {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--accent-dim); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+button {
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+
+input, select, textarea {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  padding: 6px 10px;
+  outline: none;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+}
+
+select option {
+  background: var(--bg-surface);
+}
