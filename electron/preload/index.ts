@@ -1,6 +1,11 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
 const api = {
+  workspaces: {
+    load: () => ipcRenderer.invoke('workspaces:load'),
+    save: (workspace: unknown) => ipcRenderer.invoke('workspaces:save', workspace),
+    delete: (id: string) => ipcRenderer.invoke('workspaces:delete', id)
+  },
   connections: {
     load: () => ipcRenderer.invoke('connections:load'),
     save: (config: unknown) => ipcRenderer.invoke('connections:save', config),

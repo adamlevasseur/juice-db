@@ -6,11 +6,27 @@ import {
   deleteConnection,
   addHistory,
   getHistory,
-  clearHistory
+  clearHistory,
+  loadWorkspaces,
+  saveWorkspace,
+  deleteWorkspace
 } from '../db/store'
-import type { ConnectionConfig } from '../db/types'
+import type { ConnectionConfig, Workspace } from '../db/types'
 
 export function registerIpcHandlers(): void {
+  // Workspaces
+  ipcMain.handle('workspaces:load', () => loadWorkspaces())
+
+  ipcMain.handle('workspaces:save', (_e, workspace: Workspace) => {
+    saveWorkspace(workspace)
+    return loadWorkspaces()
+  })
+
+  ipcMain.handle('workspaces:delete', (_e, id: string) => {
+    const result = deleteWorkspace(id)
+    return { ...result, workspaces: loadWorkspaces() }
+  })
+
   // Connections
   ipcMain.handle('connections:load', () => loadConnections())
 

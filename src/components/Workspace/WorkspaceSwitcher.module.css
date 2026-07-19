@@ -1,0 +1,168 @@
+.wrap {
+  position: relative;
+  -webkit-app-region: no-drag;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.trigger:hover { background: var(--bg-hover); }
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.name {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arrow {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.popover {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 240px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  padding: 6px;
+  z-index: 200;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.row:hover { background: var(--bg-hover); }
+.rowActive { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+
+.rowName {
+  flex: 1;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.count {
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--bg-hover);
+  padding: 1px 5px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.iconBtn {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.row:hover .iconBtn { opacity: 1; }
+.iconBtn:hover { background: var(--bg-surface); color: var(--text); }
+
+.newBtn {
+  width: 100%;
+  text-align: left;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--accent);
+  margin-top: 2px;
+}
+
+.newBtn:hover { background: var(--bg-hover); }
+
+.error {
+  padding: 6px 8px;
+  font-size: 11px;
+  color: var(--red);
+}
+
+.editRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  background: var(--bg-surface);
+  border-radius: 4px;
+  margin: 2px 0;
+}
+
+.editInput {
+  width: 100%;
+  font-size: 12px;
+}
+
+.palette {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-hover);
+}
+
+.swatchSelected { border-color: var(--text) !important; }
+
+.noColor {
+  font-size: 8px;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.editActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.saveBtn {
+  padding: 4px 10px;
+  background: var(--accent);
+  color: var(--bg);
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}

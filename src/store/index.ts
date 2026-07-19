@@ -1,12 +1,17 @@
 import { create } from 'zustand'
-import type { ConnectionConfig, Tab, QueryResult } from '../types'
+import type { ConnectionConfig, Tab, QueryResult, Workspace } from '../types'
 
 interface AppState {
+  workspaces: Workspace[]
+  activeWorkspaceId: string | null
   connections: ConnectionConfig[]
   activeConnectionId: string | null
   tabs: Tab[]
   activeTabId: string | null
   sidebarWidth: number
+
+  setWorkspaces: (workspaces: Workspace[]) => void
+  setActiveWorkspace: (id: string) => void
 
   setConnections: (conns: ConnectionConfig[]) => void
   setActiveConnection: (id: string | null) => void
@@ -38,12 +43,37 @@ function newTab(connectionId: string, sql = '', title?: string): Tab {
   }
 }
 
-export const useAppStore = create<AppState>((set) => ({
+export const useAppStore = create<AppState>((set, get) => ({
+  workspaces: [],
+  activeWorkspaceId: null,
   connections: [],
   activeConnectionId: null,
   tabs: [],
   activeTabId: null,
   sidebarWidth: 240,
+
+  setWorkspaces: (workspaces) =>
+    set((s) => ({
+      workspaces,
+      activeWorkspaceId:
+        s.activeWorkspaceId && workspaces.some((w) => w.id === s.activeWorkspaceId)
+          ? s.activeWorkspaceId
+          : (workspaces[0]?.id ?? null)
+    })),
+
+  setActiveWorkspace: (id) => {
+    const { tabs, connections, activeTabId, activeConnectionId } = get()
+    const workspaceOf = (connectionId: string) =>
+      connections.find((c) => c.id === connectionId)?.workspaceId
+    const visibleTabs = tabs.filter((t) => workspaceOf(t.connectionId) === id)
+    const activeTabStillVisible = visibleTabs.some((t) => t.id === activeTabId)
+    set({
+      activeWorkspaceId: id,
+      activeTabId: activeTabStillVisible ? activeTabId : (visibleTabs[visibleTabs.length - 1]?.id ?? null),
+      activeConnectionId:
+        activeConnectionId && workspaceOf(activeConnectionId) === id ? activeConnectionId : null
+    })
+  },
 
   setConnections: (connections) => set({ connections }),
   setActiveConnection: (id) => set({ activeConnectionId: id }),
@@ -56,9 +86,18 @@ export const useAppStore = create<AppState>((set) => ({
 
   closeTab: (id) =>
     set((s) => {
+      const closed = s.tabs.find((t) => t.id === id)
       const tabs = s.tabs.filter((t) => t.id !== id)
-      const activeTabId =
-        s.activeTabId === id ? (tabs[tabs.length - 1]?.id ?? null) : s.activeTabId
+      let activeTabId = s.activeTabId
+      if (s.activeTabId === id) {
+        const workspaceId = closed
+          ? s.connections.find((c) => c.id === closed.connectionId)?.workspaceId
+          : s.activeWorkspaceId
+        const candidates = tabs.filter(
+          (t) => s.connections.find((c) => c.id === t.connectionId)?.workspaceId === workspaceId
+        )
+        activeTabId = candidates[candidates.length - 1]?.id ?? null
+      }
       return { tabs, activeTabId }
     }),
 

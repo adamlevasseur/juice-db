@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import type { ConnectionConfig, DbType } from '../../types'
+import type { ConnectionConfig, DbType, Workspace } from '../../types'
+import { PALETTE } from '../../lib/palette'
 import styles from './ConnectionForm.module.css'
 
 const DEFAULT_PORTS: Record<DbType, number> = {
@@ -8,25 +9,14 @@ const DEFAULT_PORTS: Record<DbType, number> = {
   mssql: 1433
 }
 
-const PALETTE = [
-  { label: 'None', value: '' },
-  { label: 'Red', value: '#f38ba8' },
-  { label: 'Orange', value: '#fab387' },
-  { label: 'Yellow', value: '#f9e2af' },
-  { label: 'Green', value: '#a6e3a1' },
-  { label: 'Blue', value: '#89b4fa' },
-  { label: 'Purple', value: '#cba6f7' },
-  { label: 'Teal', value: '#94e2d5' },
-  { label: 'Pink', value: '#f5c2e7' },
-]
-
 interface Props {
   initial?: Partial<ConnectionConfig>
+  workspaces: Workspace[]
   onSave: (config: ConnectionConfig) => void
   onCancel: () => void
 }
 
-export function ConnectionForm({ initial, onSave, onCancel }: Props) {
+export function ConnectionForm({ initial, workspaces, onSave, onCancel }: Props) {
   const [form, setForm] = useState<Omit<ConnectionConfig, 'id'>>({
     name: initial?.name ?? '',
     type: initial?.type ?? 'postgres',
@@ -37,7 +27,8 @@ export function ConnectionForm({ initial, onSave, onCancel }: Props) {
     password: initial?.password ?? '',
     ssl: initial?.ssl ?? false,
     color: initial?.color ?? '',
-    folder: initial?.folder ?? ''
+    folder: initial?.folder ?? '',
+    workspaceId: initial?.workspaceId ?? workspaces[0]?.id ?? ''
   })
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<{ ok: boolean; msg: string } | null>(null)
@@ -106,6 +97,14 @@ export function ConnectionForm({ initial, onSave, onCancel }: Props) {
           <input type="password" value={form.password} onChange={(e) => field('password', e.target.value)} />
         </label>
       </div>
+
+      <label>Workspace
+        <select value={form.workspaceId} onChange={(e) => field('workspaceId', e.target.value)}>
+          {workspaces.map((w) => (
+            <option key={w.id} value={w.id}>{w.name}</option>
+          ))}
+        </select>
+      </label>
 
       <label>Folder <span className={styles.hint}>(group connections together)</span>
         <input

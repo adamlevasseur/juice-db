@@ -176,13 +176,15 @@ function FolderNode({
 }
 
 export function Sidebar() {
-  const { connections, setConnections } = useAppStore()
+  const { connections, setConnections, workspaces, activeWorkspaceId } = useAppStore()
   const [showForm, setShowForm] = useState(false)
   const [editConn, setEditConn] = useState<ConnectionConfig | null>(null)
 
   useEffect(() => {
     window.api.connections.load().then(setConnections)
   }, [])
+
+  const workspaceConnections = connections.filter((c) => c.workspaceId === activeWorkspaceId)
 
   async function handleSave(config: ConnectionConfig) {
     const updated = await window.api.connections.save(config)
@@ -199,7 +201,7 @@ export function Sidebar() {
   const folderMap = new Map<string, ConnectionConfig[]>()
   const rootConns: ConnectionConfig[] = []
 
-  for (const c of connections) {
+  for (const c of workspaceConnections) {
     if (c.folder?.trim()) {
       const key = c.folder.trim()
       if (!folderMap.has(key)) folderMap.set(key, [])
@@ -217,7 +219,7 @@ export function Sidebar() {
       </div>
 
       <div className={styles.tree}>
-        {connections.length === 0 && (
+        {workspaceConnections.length === 0 && (
           <div className={styles.empty}>No connections yet.<br />Click + to add one.</div>
         )}
 
@@ -235,7 +237,8 @@ export function Sidebar() {
       {(showForm || editConn) && (
         <div className={styles.overlay}>
           <ConnectionForm
-            initial={editConn ?? undefined}
+            initial={editConn ?? { workspaceId: activeWorkspaceId ?? undefined }}
+            workspaces={workspaces}
             onSave={handleSave}
             onCancel={() => { setShowForm(false); setEditConn(null) }}
           />

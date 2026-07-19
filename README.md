@@ -19,6 +19,12 @@ npm run dev
 
 This launches `electron-vite dev`, which starts the renderer with hot-reload and boots the Electron main process.
 
+> **Note:** The `electron` npm package (v42.2.0) doesn't ship a `postinstall` script, so `npm install` alone won't download the actual Electron binary. If `npm run dev` fails with `Error: Electron uninstall`, run:
+> ```bash
+> node node_modules/electron/install.js
+> ```
+> then try `npm run dev` again.
+
 Other useful scripts:
 
 ```bash

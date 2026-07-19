@@ -1,16 +1,28 @@
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef, useCallback, useEffect } from 'react'
 import { Sidebar } from './components/Sidebar/Sidebar'
 import { QueryEditor } from './components/Editor/QueryEditor'
 import { ResultsGrid } from './components/Results/ResultsGrid'
 import { QueryHistory } from './components/History/QueryHistory'
+import { WorkspaceSwitcher } from './components/Workspace/WorkspaceSwitcher'
 import { useAppStore } from './store'
 import styles from './App.module.css'
 
 type RightPanel = 'results' | 'history'
 
 export default function App() {
-  const { tabs, activeTabId, setActiveTab, closeTab, openTab, activeConnectionId, connections, renameTab } =
-    useAppStore()
+  const {
+    tabs,
+    activeTabId,
+    setActiveTab,
+    closeTab,
+    openTab,
+    activeConnectionId,
+    activeWorkspaceId,
+    workspaces,
+    setWorkspaces,
+    connections,
+    renameTab
+  } = useAppStore()
   const [rightPanel, setRightPanel] = useState<RightPanel>('results')
   const [splitPct, setSplitPct] = useState(55)
   const [sidebarWidth, setSidebarWidth] = useAppStore((s) => [s.sidebarWidth, s.setSidebarWidth])
@@ -20,6 +32,10 @@ export default function App() {
   // Tab inline rename state
   const [renamingTabId, setRenamingTabId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
+
+  useEffect(() => {
+    window.api.workspaces.load().then(setWorkspaces)
+  }, [])
 
   const onMouseDown = useCallback((handle: 'sidebar' | 'split') => {
     dragging.current = handle
@@ -63,34 +79,47 @@ export default function App() {
   }
 
   const activeColor = activeTab ? getConnectionColor(activeTab.connectionId) : undefined
+  const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId)
+  const visibleTabs = tabs.filter(
+    (t) => connections.find((c) => c.id === t.connectionId)?.workspaceId === activeWorkspaceId
+  )
 
   return (
-    <div
-      className={styles.app}
-      ref={containerRef}
-      onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
-      onMouseLeave={onMouseUp}
-    >
-      {/* Sidebar */}
-      <div className={styles.sidebar} style={{ width: sidebarWidth }}>
-        <Sidebar />
+    <div className={styles.appRoot}>
+      {/* Workspace banner — top-most row, doubles as the window drag region */}
+      <div
+        className={styles.workspaceBanner}
+        style={activeWorkspace?.color ? { background: `color-mix(in srgb, ${activeWorkspace.color} 16%, var(--bg-panel))` } : undefined}
+      >
+        <WorkspaceSwitcher />
       </div>
 
-      {/* Sidebar resize handle */}
-      <div className={styles.resizeH} onMouseDown={() => onMouseDown('sidebar')} />
+      <div
+        className={styles.app}
+        ref={containerRef}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+        onMouseLeave={onMouseUp}
+      >
+        {/* Sidebar */}
+        <div className={styles.sidebar} style={{ width: sidebarWidth }}>
+          <Sidebar />
+        </div>
 
-      {/* Main area */}
-      <div className={styles.main}>
-        {/* Connection color stripe — visible strip showing the active connection's color */}
-        <div
-          className={styles.colorStripe}
-          style={{ background: activeColor ?? 'transparent', opacity: activeColor ? 1 : 0 }}
-        />
+        {/* Sidebar resize handle */}
+        <div className={styles.resizeH} onMouseDown={() => onMouseDown('sidebar')} />
 
-        {/* Tab bar */}
-        <div className={styles.tabBar}>
-          {tabs.map((tab) => {
+        {/* Main area */}
+        <div className={styles.main}>
+          {/* Connection color stripe — visible strip showing the active connection's color */}
+          <div
+            className={styles.colorStripe}
+            style={{ background: activeColor ?? 'transparent', opacity: activeColor ? 1 : 0 }}
+          />
+
+          {/* Tab bar */}
+          <div className={styles.tabBar}>
+          {visibleTabs.map((tab) => {
             const color = getConnectionColor(tab.connectionId)
             const isActive = tab.id === activeTabId
             return (
@@ -195,6 +224,7 @@ export default function App() {
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   )

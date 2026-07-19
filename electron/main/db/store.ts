@@ -1,12 +1,15 @@
 import { app } from 'electron'
 import { join } from 'path'
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
-import type { ConnectionConfig } from './types'
+import type { ConnectionConfig, Workspace } from './types'
 
 interface StoreData {
+  workspaces: Workspace[]
   connections: ConnectionConfig[]
   history: HistoryEntry[]
 }
+
+const DEFAULT_WORKSPACE: Workspace = { id: 'default', name: 'Default' }
 
 export interface HistoryEntry {
   id: number
@@ -33,24 +36,69 @@ function dataDir(): string {
 function load(): StoreData {
   if (_data) return _data
   const file = join(dataDir(), 'data.json')
+  let needsSave = false
   if (existsSync(file)) {
     try {
       _data = JSON.parse(readFileSync(file, 'utf-8'))
       // Find max history id
       const maxId = Math.max(0, ...(_data!.history ?? []).map((h) => h.id))
       _nextId = maxId + 1
-      return _data!
     } catch {
       // corrupted file — start fresh
+      _data = { workspaces: [], connections: [], history: [] }
+    }
+  } else {
+    _data = { workspaces: [], connections: [], history: [] }
+  }
+
+  // Migration: ensure at least one workspace exists, and every connection belongs to one
+  if (!_data!.workspaces || _data!.workspaces.length === 0) {
+    _data!.workspaces = [DEFAULT_WORKSPACE]
+    needsSave = true
+  }
+  const fallbackWorkspaceId = _data!.workspaces[0].id
+  for (const c of _data!.connections) {
+    if (!c.workspaceId) {
+      c.workspaceId = fallbackWorkspaceId
+      needsSave = true
     }
   }
-  _data = { connections: [], history: [] }
-  return _data
+
+  if (needsSave) save()
+  return _data!
 }
 
 function save(): void {
   const file = join(dataDir(), 'data.json')
   writeFileSync(file, JSON.stringify(_data, null, 2))
+}
+
+export function loadWorkspaces(): Workspace[] {
+  return load().workspaces
+}
+
+export function saveWorkspace(workspace: Workspace): void {
+  const data = load()
+  const idx = data.workspaces.findIndex((w) => w.id === workspace.id)
+  if (idx >= 0) {
+    data.workspaces[idx] = workspace
+  } else {
+    data.workspaces.push(workspace)
+  }
+  save()
+}
+
+export function deleteWorkspace(id: string): { ok: boolean; reason?: string } {
+  const data = load()
+  if (data.workspaces.length <= 1) {
+    return { ok: false, reason: 'At least one workspace is required.' }
+  }
+  if (data.connections.some((c) => c.workspaceId === id)) {
+    return { ok: false, reason: 'Move or delete this workspace\'s connections first.' }
+  }
+  data.workspaces = data.workspaces.filter((w) => w.id !== id)
+  save()
+  return { ok: true }
 }
 
 export function saveConnection(config: ConnectionConfig): void {

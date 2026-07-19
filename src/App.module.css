@@ -1,8 +1,30 @@
-.app {
+.appRoot {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   overflow: hidden;
+}
+
+/* Workspace banner — top-most row of the whole app; also the window drag region,
+   so its left padding has to clear the macOS traffic lights (hiddenInset title bar). */
+.workspaceBanner {
+  display: flex;
+  align-items: center;
+  height: 34px;
+  flex-shrink: 0;
+  padding-left: 78px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  -webkit-app-region: drag;
+  transition: background 0.2s;
+}
+
+.app {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
   position: relative;
+  min-height: 0;
 }
 
 .sidebar {
@@ -43,7 +65,6 @@
   overflow-x: auto;
   flex-shrink: 0;
   -webkit-app-region: drag;
-  padding-top: 28px;
 }
 
 .tab {

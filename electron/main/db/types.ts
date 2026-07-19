@@ -1,5 +1,11 @@
 export type DbType = 'postgres' | 'mysql' | 'mssql'
 
+export interface Workspace {
+  id: string
+  name: string
+  color?: string
+}
+
 export interface ConnectionConfig {
   id: string
   name: string
@@ -12,6 +18,7 @@ export interface ConnectionConfig {
   ssl?: boolean
   color?: string
   folder?: string
+  workspaceId: string
 }
 
 export interface QueryResult {

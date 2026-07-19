@@ -1,5 +1,11 @@
 export type DbType = 'postgres' | 'mysql' | 'mssql'
 
+export interface Workspace {
+  id: string
+  name: string
+  color?: string
+}
+
 export interface ConnectionConfig {
   id: string
   name: string
@@ -12,6 +18,7 @@ export interface ConnectionConfig {
   ssl?: boolean
   color?: string
   folder?: string
+  workspaceId: string
 }
 
 export interface QueryResult {
@@ -59,6 +66,11 @@ export interface Tab {
 declare global {
   interface Window {
     api: {
+      workspaces: {
+        load: () => Promise<Workspace[]>
+        save: (workspace: Workspace) => Promise<Workspace[]>
+        delete: (id: string) => Promise<{ ok: boolean; reason?: string; workspaces: Workspace[] }>
+      }
       connections: {
         load: () => Promise<ConnectionConfig[]>
         save: (config: ConnectionConfig) => Promise<ConnectionConfig[]>
