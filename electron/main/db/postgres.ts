@@ -1,4 +1,5 @@
 import { Pool } from 'pg'
+import { ensureTunnel, closeTunnel, consumeRelayError, isTunnelAlive } from './tunnel'
 import type { ConnectionConfig, DbDriver, QueryResult, SchemaTable, TableColumn } from './types'
 
 export class PostgresDriver implements DbDriver {
@@ -7,9 +8,10 @@ export class PostgresDriver implements DbDriver {
   constructor(private config: ConnectionConfig) {}
 
   async connect(): Promise<void> {
+    const proxy = await ensureTunnel(this.config.id, this.config)
     this.pool = new Pool({
-      host: this.config.host,
-      port: this.config.port,
+      host: proxy?.host ?? this.config.host,
+      port: proxy?.port ?? this.config.port,
       database: this.config.database,
       user: this.config.username,
       password: this.config.password,
@@ -17,18 +19,26 @@ export class PostgresDriver implements DbDriver {
       max: 5,
       idleTimeoutMillis: 30000
     })
-    await this.pool.query('SELECT 1')
+    this.pool.on('error', (err) => console.error('Postgres pool error:', err.message))
+    try {
+      await this.pool.query('SELECT 1')
+    } catch (err) {
+      throw this.augmentTunnelError(err, proxy !== null)
+    }
   }
 
   async disconnect(): Promise<void> {
     await this.pool?.end()
     this.pool = null
+    await closeTunnel(this.config.id)
   }
 
   async testConnection(): Promise<void> {
+    const tunnelKey = `test:${this.config.id}:${Date.now()}:${Math.random().toString(36).slice(2)}`
+    const proxy = await ensureTunnel(tunnelKey, this.config)
     const pool = new Pool({
-      host: this.config.host,
-      port: this.config.port,
+      host: proxy?.host ?? this.config.host,
+      port: proxy?.port ?? this.config.port,
       database: this.config.database,
       user: this.config.username,
       password: this.config.password,
@@ -37,21 +47,38 @@ export class PostgresDriver implements DbDriver {
     })
     try {
       await pool.query('SELECT 1')
+    } catch (err) {
+      throw this.augmentTunnelError(err, proxy !== null, tunnelKey)
     } finally {
       await pool.end()
+      if (proxy) await closeTunnel(tunnelKey)
     }
   }
 
   async query(sql: string): Promise<QueryResult> {
     if (!this.pool) throw new Error('Not connected')
     const start = Date.now()
-    const result = await this.pool.query(sql)
-    return {
-      columns: result.fields.map((f) => f.name),
-      rows: result.rows,
-      rowCount: result.rowCount ?? result.rows.length,
-      duration: Date.now() - start
+    try {
+      const result = await this.pool.query(sql)
+      return {
+        columns: result.fields.map((f) => f.name),
+        rows: result.rows,
+        rowCount: result.rowCount ?? result.rows.length,
+        duration: Date.now() - start
+      }
+    } catch (err) {
+      if (this.config.sshHops?.length && !isTunnelAlive(this.config.id)) {
+        await this.disconnect()
+      }
+      throw err
     }
+  }
+
+  private augmentTunnelError(err: unknown, tunneled: boolean, key: string = this.config.id): Error {
+    if (!tunneled) return err instanceof Error ? err : new Error(String(err))
+    const relayError = consumeRelayError(key)
+    if (relayError) return new Error(`SSH/Docker relay error: ${relayError}`)
+    return err instanceof Error ? err : new Error(String(err))
   }
 
   async getDatabases(): Promise<string[]> {

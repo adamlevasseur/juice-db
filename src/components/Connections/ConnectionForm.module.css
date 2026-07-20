@@ -1,9 +1,18 @@
 .form {
   display: flex;
   flex-direction: column;
+  width: 480px;
+  max-height: 85vh;
+  overflow: hidden;
+}
+
+.formBody {
+  display: flex;
+  flex-direction: column;
   gap: 12px;
   padding: 24px;
-  width: 480px;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .form h2 {
@@ -43,7 +52,10 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 8px;
+  flex-shrink: 0;
+  padding: 12px 24px;
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border);
 }
 
 .testBtn {
@@ -126,3 +138,61 @@
   color: var(--text-muted);
   line-height: 1;
 }
+
+.sshToggle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  padding: 4px 0;
+}
+
+.sshToggle:hover { color: var(--accent); }
+
+.sshSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.hopCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-hover);
+}
+
+.hopHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.removeHopBtn {
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1;
+  padding: 2px 6px;
+}
+
+.removeHopBtn:hover { color: var(--red); }
+
+.addHopBtn {
+  align-self: flex-start;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.addHopBtn:hover { border-color: var(--accent); color: var(--accent); }

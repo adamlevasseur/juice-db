@@ -1,9 +1,11 @@
-import { ipcMain } from 'electron'
+import { ipcMain, dialog, app, BrowserWindow } from 'electron'
+import { join } from 'path'
 import { createDriver, getOrCreateConnection, disconnect } from '../db'
 import {
   saveConnection,
   loadConnections,
   deleteConnection,
+  duplicateConnection,
   addHistory,
   getHistory,
   clearHistory,
@@ -38,6 +40,11 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('connections:delete', (_e, id: string) => {
     disconnect(id).catch(() => {})
     deleteConnection(id)
+    return loadConnections()
+  })
+
+  ipcMain.handle('connections:duplicate', (_e, id: string) => {
+    duplicateConnection(id)
     return loadConnections()
   })
 
@@ -88,5 +95,17 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('history:get', (_e, connectionId: string) => getHistory(connectionId))
   ipcMain.handle('history:clear', (_e, connectionId: string) => {
     clearHistory(connectionId)
+  })
+
+  // System
+  ipcMain.handle('dialog:pickFile', async (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    const options: Electron.OpenDialogOptions = {
+      title: 'Select SSH Private Key',
+      properties: ['openFile'],
+      defaultPath: join(app.getPath('home'), '.ssh')
+    }
+    const result = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options)
+    return result.canceled || result.filePaths.length === 0 ? null : result.filePaths[0]
   })
 }

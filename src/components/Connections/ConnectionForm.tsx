@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import type { ConnectionConfig, DbType, Workspace } from '../../types'
+import type { ConnectionConfig, DbType, SshAuth, SshHop, Workspace } from '../../types'
 import { PALETTE } from '../../lib/palette'
 import styles from './ConnectionForm.module.css'
 
@@ -7,6 +7,10 @@ const DEFAULT_PORTS: Record<DbType, number> = {
   postgres: 5432,
   mysql: 3306,
   mssql: 1433
+}
+
+function newHop(): SshHop {
+  return { host: '', port: 22, username: '', auth: { method: 'password', password: '' } }
 }
 
 interface Props {
@@ -28,10 +32,13 @@ export function ConnectionForm({ initial, workspaces, onSave, onCancel }: Props)
     ssl: initial?.ssl ?? false,
     color: initial?.color ?? '',
     folder: initial?.folder ?? '',
-    workspaceId: initial?.workspaceId ?? workspaces[0]?.id ?? ''
+    workspaceId: initial?.workspaceId ?? workspaces[0]?.id ?? '',
+    sshHops: initial?.sshHops ?? [],
+    dockerContainer: initial?.dockerContainer ?? ''
   })
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<{ ok: boolean; msg: string } | null>(null)
+  const [sshOpen, setSshOpen] = useState((initial?.sshHops?.length ?? 0) > 0)
 
   function field<K extends keyof typeof form>(key: K, val: typeof form[K]) {
     setForm((f) => {
@@ -40,6 +47,45 @@ export function ConnectionForm({ initial, workspaces, onSave, onCancel }: Props)
       return next
     })
     setTestResult(null)
+  }
+
+  function updateHops(updater: (hops: SshHop[]) => SshHop[]) {
+    setForm((f) => ({ ...f, sshHops: updater(f.sshHops ?? []) }))
+    setTestResult(null)
+  }
+
+  function addHop() {
+    updateHops((hops) => [...hops, newHop()])
+    setSshOpen(true)
+  }
+
+  function removeHop(index: number) {
+    updateHops((hops) => hops.filter((_, i) => i !== index))
+  }
+
+  function updateHop(index: number, patch: Partial<SshHop>) {
+    updateHops((hops) => hops.map((h, i) => (i === index ? { ...h, ...patch } : h)))
+  }
+
+  function setHopAuthMethod(index: number, method: SshAuth['method']) {
+    const auth: SshAuth =
+      method === 'password'
+        ? { method: 'password', password: '' }
+        : method === 'privateKey'
+          ? { method: 'privateKey', privateKeyPath: '' }
+          : { method: 'agent' }
+    updateHop(index, { auth })
+  }
+
+  function updateHopAuth(index: number, patch: Partial<SshAuth>) {
+    updateHops((hops) =>
+      hops.map((h, i) => (i === index ? { ...h, auth: { ...h.auth, ...patch } as SshAuth } : h))
+    )
+  }
+
+  async function pickPrivateKey(index: number) {
+    const path = await window.api.system.pickFile()
+    if (path) updateHopAuth(index, { privateKeyPath: path })
   }
 
   async function handleTest() {
@@ -62,6 +108,7 @@ export function ConnectionForm({ initial, workspaces, onSave, onCancel }: Props)
 
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
+      <div className={styles.formBody}>
       <h2>{initial?.id ? 'Edit Connection' : 'New Connection'}</h2>
 
       <label>Name
@@ -77,7 +124,10 @@ export function ConnectionForm({ initial, workspaces, onSave, onCancel }: Props)
       </label>
 
       <div className={styles.row}>
-        <label style={{ flex: 1 }}>Host
+        <label style={{ flex: 1 }}>
+          Host{(form.sshHops?.length ?? 0) > 0 && (
+            <span className={styles.hint}> (reachable from inside the container — usually localhost)</span>
+          )}
           <input value={form.host} onChange={(e) => field('host', e.target.value)} required />
         </label>
         <label style={{ width: 90 }}>Port
@@ -137,9 +187,126 @@ export function ConnectionForm({ initial, workspaces, onSave, onCancel }: Props)
         Use SSL
       </label>
 
+      <div>
+        <button type="button" className={styles.sshToggle} onClick={() => setSshOpen((o) => !o)}>
+          {sshOpen ? '▾' : '▸'} SSH Tunnel {form.sshHops?.length ? `(${form.sshHops.length} hop${form.sshHops.length > 1 ? 's' : ''})` : ''}
+        </button>
+
+        {sshOpen && (
+          <div className={styles.sshSection}>
+            <div className={styles.hint}>
+              Connect through one or more SSH hops, then <code>docker exec</code> into a container to reach the database above.
+            </div>
+
+            {(form.sshHops ?? []).map((hop, i) => (
+              <div key={i} className={styles.hopCard}>
+                <div className={styles.hopHeader}>
+                  <span>Hop {i + 1}</span>
+                  <button type="button" className={styles.removeHopBtn} onClick={() => removeHop(i)} title="Remove hop">×</button>
+                </div>
+
+                <div className={styles.row}>
+                  <label style={{ flex: 1 }}>Host
+                    <input value={hop.host} onChange={(e) => updateHop(i, { host: e.target.value })} required />
+                  </label>
+                  <label style={{ width: 80 }}>Port
+                    <input
+                      type="number"
+                      value={hop.port}
+                      onChange={(e) => updateHop(i, { port: Number(e.target.value) })}
+                      required
+                    />
+                  </label>
+                </div>
+
+                <label className={styles.checkbox}>
+                  <input
+                    type="checkbox"
+                    checked={hop.proxyCommand !== undefined}
+                    onChange={(e) => updateHop(i, { proxyCommand: e.target.checked ? '' : undefined })}
+                  />
+                  Use ProxyCommand <span className={styles.hint}>(Cloudflare Access, corporate SSO gateways, etc.)</span>
+                </label>
+
+                {hop.proxyCommand !== undefined && (
+                  <label>Command <span className={styles.hint}>(%h and %p are replaced with this hop's host/port)</span>
+                    <input
+                      value={hop.proxyCommand}
+                      onChange={(e) => updateHop(i, { proxyCommand: e.target.value })}
+                      placeholder="cloudflared access ssh --hostname %h"
+                    />
+                  </label>
+                )}
+
+                <label>Username
+                  <input value={hop.username} onChange={(e) => updateHop(i, { username: e.target.value })} required />
+                </label>
+
+                <label>Auth method
+                  <select
+                    value={hop.auth.method}
+                    onChange={(e) => setHopAuthMethod(i, e.target.value as SshAuth['method'])}
+                  >
+                    <option value="password">Password</option>
+                    <option value="privateKey">Private Key</option>
+                    <option value="agent">SSH Agent</option>
+                  </select>
+                </label>
+
+                {hop.auth.method === 'password' && (
+                  <label>Password
+                    <input
+                      type="password"
+                      value={hop.auth.password}
+                      onChange={(e) => updateHopAuth(i, { password: e.target.value })}
+                    />
+                  </label>
+                )}
+
+                {hop.auth.method === 'privateKey' && (
+                  <>
+                    <label>Private key file
+                      <div className={styles.row}>
+                        <input value={hop.auth.privateKeyPath} readOnly placeholder="No file selected" style={{ flex: 1 }} />
+                        <button type="button" className={styles.testBtn} onClick={() => pickPrivateKey(i)}>Browse…</button>
+                      </div>
+                    </label>
+                    <label>Passphrase <span className={styles.hint}>(optional)</span>
+                      <input
+                        type="password"
+                        value={hop.auth.passphrase ?? ''}
+                        onChange={(e) => updateHopAuth(i, { passphrase: e.target.value })}
+                      />
+                    </label>
+                  </>
+                )}
+
+                {hop.auth.method === 'agent' && (
+                  <div className={styles.hint}>Uses the local SSH agent (SSH_AUTH_SOCK).</div>
+                )}
+              </div>
+            ))}
+
+            <button type="button" className={styles.addHopBtn} onClick={addHop}>+ Add Hop</button>
+
+            {(form.sshHops?.length ?? 0) > 0 && (
+              <label>Docker container
+                <input
+                  value={form.dockerContainer ?? ''}
+                  onChange={(e) => field('dockerContainer', e.target.value)}
+                  placeholder="e.g. my-postgres-container"
+                  required
+                />
+              </label>
+            )}
+          </div>
+        )}
+      </div>
+
       {testResult && (
         <div className={testResult.ok ? styles.success : styles.error}>{testResult.msg}</div>
       )}
+      </div>
 
       <div className={styles.actions}>
         <button type="button" className={styles.testBtn} onClick={handleTest} disabled={testing}>

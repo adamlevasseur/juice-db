@@ -6,6 +6,33 @@ export interface Workspace {
   color?: string
 }
 
+export interface SshAuthPassword {
+  method: 'password'
+  password: string
+}
+
+export interface SshAuthPrivateKey {
+  method: 'privateKey'
+  privateKeyPath: string
+  passphrase?: string
+}
+
+export interface SshAuthAgent {
+  method: 'agent'
+}
+
+export type SshAuth = SshAuthPassword | SshAuthPrivateKey | SshAuthAgent
+
+export interface SshHop {
+  host: string
+  port: number
+  username: string
+  auth: SshAuth
+  /** Local command whose stdio becomes this hop's transport (ssh's ProxyCommand equivalent),
+   *  e.g. "cloudflared access ssh --hostname %h". %h/%p are substituted with host/port. */
+  proxyCommand?: string
+}
+
 export interface ConnectionConfig {
   id: string
   name: string
@@ -19,6 +46,8 @@ export interface ConnectionConfig {
   color?: string
   folder?: string
   workspaceId: string
+  sshHops?: SshHop[]
+  dockerContainer?: string
 }
 
 export interface QueryResult {
@@ -75,9 +104,13 @@ declare global {
         load: () => Promise<ConnectionConfig[]>
         save: (config: ConnectionConfig) => Promise<ConnectionConfig[]>
         delete: (id: string) => Promise<ConnectionConfig[]>
+        duplicate: (id: string) => Promise<ConnectionConfig[]>
         test: (config: ConnectionConfig) => Promise<void>
         connect: (config: ConnectionConfig) => Promise<void>
         disconnect: (id: string) => Promise<void>
+      }
+      system: {
+        pickFile: () => Promise<string | null>
       }
       query: {
         run: (args: { connectionId: string; sql: string; config: ConnectionConfig }) => Promise<{ ok: true; result: QueryResult } | { ok: false; error: string }>

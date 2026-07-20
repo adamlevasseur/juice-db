@@ -1,6 +1,7 @@
 import { app } from 'electron'
 import { join } from 'path'
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
+import { randomUUID } from 'node:crypto'
 import type { ConnectionConfig, Workspace } from './types'
 
 interface StoreData {
@@ -120,6 +121,27 @@ export function deleteConnection(id: string): void {
   const data = load()
   data.connections = data.connections.filter((c) => c.id !== id)
   save()
+}
+
+export function duplicateConnection(id: string): ConnectionConfig | null {
+  const data = load()
+  const source = data.connections.find((c) => c.id === id)
+  if (!source) return null
+
+  const siblingNames = new Set(
+    data.connections.filter((c) => c.workspaceId === source.workspaceId).map((c) => c.name)
+  )
+  let name = `${source.name} (copy)`
+  let n = 2
+  while (siblingNames.has(name)) {
+    name = `${source.name} (copy ${n})`
+    n++
+  }
+
+  const copy: ConnectionConfig = { ...source, id: randomUUID(), name }
+  data.connections.push(copy)
+  save()
+  return copy
 }
 
 export function addHistory(entry: Omit<HistoryEntry, 'id' | 'executedAt'>): void {

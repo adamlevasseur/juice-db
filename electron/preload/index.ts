@@ -10,6 +10,7 @@ const api = {
     load: () => ipcRenderer.invoke('connections:load'),
     save: (config: unknown) => ipcRenderer.invoke('connections:save', config),
     delete: (id: string) => ipcRenderer.invoke('connections:delete', id),
+    duplicate: (id: string) => ipcRenderer.invoke('connections:duplicate', id),
     test: (config: unknown) => ipcRenderer.invoke('connections:test', config),
     connect: (config: unknown) => ipcRenderer.invoke('connections:connect', config),
     disconnect: (id: string) => ipcRenderer.invoke('connections:disconnect', id)
@@ -25,6 +26,9 @@ const api = {
   history: {
     get: (connectionId: string) => ipcRenderer.invoke('history:get', connectionId),
     clear: (connectionId: string) => ipcRenderer.invoke('history:clear', connectionId)
+  },
+  system: {
+    pickFile: () => ipcRenderer.invoke('dialog:pickFile')
   }
 }
 

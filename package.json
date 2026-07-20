@@ -17,6 +17,7 @@
     "mssql": "^11.0.0",
     "mysql2": "^3.0.0",
     "pg": "^8.0.0",
+    "ssh2": "^1.17.0",
     "zustand": "^4.0.0"
   },
   "build": {
@@ -32,7 +33,14 @@
     ],
     "mac": {
       "category": "public.app-category.developer-tools",
-      "target": [{ "target": "dir", "arch": ["arm64"] }],
+      "target": [
+        {
+          "target": "dir",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
       "identity": null
     },
     "asar": true,
@@ -46,6 +54,7 @@
     "@types/pg": "^8.0.0",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
+    "@types/ssh2": "^1.15.5",
     "@vitejs/plugin-react": "^4.0.0",
     "electron": "~42.2.0",
     "electron-builder": "^26.8.1",
